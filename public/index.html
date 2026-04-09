@@ -2,84 +2,190 @@
 <html>
 <head>
   <title>Smart Plant Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      background: #050a0f;
       color: white;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     h1 {
-      margin-top: 30px;
-      font-size: 2.5rem;
+      margin: 20px;
+      color: #00ff9f;
+      text-shadow: 0 0 15px #00ff9f;
     }
 
-    .container {
+    .main {
       display: flex;
-      justify-content: center;
+      width: 90%;
       gap: 30px;
-      margin-top: 50px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,255,150,0.2);
+      border-radius: 20px;
+      padding: 25px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 25px rgba(0,255,150,0.2);
+    }
+
+    .left {
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 30px;
-      border-radius: 20px;
-      width: 200px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      padding: 20px;
+      border-radius: 15px;
+      background: rgba(0,255,150,0.05);
+      box-shadow: 0 0 15px rgba(0,255,150,0.2);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(0,255,150,0.5);
     }
 
     .value {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       margin-top: 10px;
     }
 
     .pump-on {
-      color: #00ff88;
+      color: #00ff9f;
+      text-shadow: 0 0 10px #00ff9f;
     }
 
     .pump-off {
       color: #ff4d4d;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    .alert {
+      margin-top: 15px;
+      color: #ffcc00;
+      font-weight: bold;
+    }
+
+    .graph {
+      flex: 1;
+      min-width: 400px;
+    }
+
+    canvas {
+      width: 100%;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>🌱 Smart Plant Dashboard</h1>
+  <h1>🌱 Smart Plant Control Panel</h1>
 
-  <div class="container">
-    
-    <div class="card">
-      <h2>💧 Moisture</h2>
-      <div class="value" id="moisture">--</div>
+  <div class="main">
+
+    <!-- LEFT PANEL -->
+    <div class="panel left">
+
+      <div class="card">
+        <h3>💧 Moisture</h3>
+        <div class="value" id="moisture">--</div>
+        <div class="status" id="status">--</div>
+      </div>
+
+      <div class="card">
+        <h3>🚿 Pump</h3>
+        <div class="value" id="pump">--</div>
+      </div>
+
+      <div class="alert" id="alert"></div>
+
     </div>
 
-    <div class="card">
-      <h2>🚿 Pump</h2>
-      <div class="value" id="pump">--</div>
+    <!-- GRAPH PANEL -->
+    <div class="panel graph">
+      <canvas id="chart"></canvas>
     </div>
 
   </div>
 
   <script>
+    const ctx = document.getElementById('chart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Moisture',
+          data: [],
+          borderColor: '#00ff9f',
+          borderWidth: 2,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: { color: 'white' }
+          }
+        },
+        scales: {
+          x: { ticks: { color: 'white' } },
+          y: { ticks: { color: 'white' } }
+        }
+      }
+    });
+
     async function getData() {
       const res = await fetch('/api/sensor');
       const data = await res.json();
 
       document.getElementById("moisture").innerText = data.moisture;
 
+      let status = "";
+      if (data.moisture < 1000) {
+        status = "🌵 Dry";
+        document.getElementById("alert").innerText = "⚠️ Water Needed!";
+      } else {
+        status = "💧 Optimal";
+        document.getElementById("alert").innerText = "";
+      }
+      document.getElementById("status").innerText = status;
+
       const pumpEl = document.getElementById("pump");
       pumpEl.innerText = data.pump;
+      pumpEl.className = "value " + (data.pump === "ON" ? "pump-on" : "pump-off");
 
-      if (data.pump === "ON") {
-        pumpEl.className = "value pump-on";
-      } else {
-        pumpEl.className = "value pump-off";
+      const time = new Date().toLocaleTimeString();
+
+      if (chart.data.labels.length > 12) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
       }
+
+      chart.data.labels.push(time);
+      chart.data.datasets[0].data.push(data.moisture);
+      chart.update();
     }
 
     setInterval(getData, 2000);
