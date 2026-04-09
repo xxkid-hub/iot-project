@@ -8,36 +8,46 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(270deg,#02070c,#001a14,#02070c);
-      background-size: 600% 600%;
-      animation: bgMove 20s infinite;
+      background: linear-gradient(-45deg, #02070c, #001a14, #001f2b, #02070c);
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
       color: white;
       overflow-x: hidden;
     }
 
-    @keyframes bgMove {
-      0%{background-position:0%}
-      50%{background-position:100%}
-      100%{background-position:0%}
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
-    /* 🌪️ MULTIPLE FLOATING GLOWS */
-    .glow {
+    /* 🌪️ Glow blobs */
+    .bg-glow {
       position: fixed;
+      width: 300px;
+      height: 300px;
       border-radius: 50%;
       filter: blur(120px);
+      opacity: 0.5;
       z-index: -1;
-      animation: float 12s infinite alternate ease-in-out;
+      animation: floatGlow 12s infinite alternate ease-in-out;
     }
 
-    .g1 { width:300px;height:300px;background:#00ff9f33;top:10%;left:10%;}
-    .g2 { width:250px;height:250px;background:#0099ff33;bottom:10%;right:10%;}
-    .g3 { width:200px;height:200px;background:#ff00ff33;top:50%;left:50%;}
-    .g4 { width:180px;height:180px;background:#00ffff33;bottom:30%;left:20%;}
+    .bg-glow1 { background: #00ff9f; top: 10%; left: 10%; }
+    .bg-glow2 { background: #0099ff; bottom: 10%; right: 10%; }
+    .bg-glow3 { background: #ff00ff; top: 50%; left: 60%; }
 
-    @keyframes float {
-      from {transform: translateY(0)}
-      to {transform: translateY(60px)}
+    @keyframes floatGlow {
+      from { transform: translateY(0px); }
+      to { transform: translateY(60px); }
+    }
+
+    /* 🌌 Particles */
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -2;
     }
 
     h1 {
@@ -91,17 +101,18 @@
     }
 
     canvas { height:300px !important; }
-
   </style>
 </head>
 
 <body>
 
-<!-- 🌪️ Glow layers -->
-<div class="glow g1"></div>
-<div class="glow g2"></div>
-<div class="glow g3"></div>
-<div class="glow g4"></div>
+<!-- 🌪️ Glow -->
+<div class="bg-glow bg-glow1"></div>
+<div class="bg-glow bg-glow2"></div>
+<div class="bg-glow bg-glow3"></div>
+
+<!-- 🌌 Particles -->
+<canvas id="particles"></canvas>
 
 <h1>🌱 Smart Plant Dashboard</h1>
 
@@ -186,6 +197,46 @@ document.getElementById("slider").oninput=function(){
 }
 
 setInterval(updateData,2000);
+
+/* 🌌 PARTICLES SCRIPT */
+const canvas = document.getElementById("particles");
+const ctxp = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+
+for (let i = 0; i < 100; i++) {
+  particles.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*2,
+    dx: Math.random()-0.5,
+    dy: Math.random()-0.5
+  });
+}
+
+function animateParticles(){
+  ctxp.clearRect(0,0,canvas.width,canvas.height);
+
+  particles.forEach(p=>{
+    ctxp.beginPath();
+    ctxp.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctxp.fillStyle="rgba(0,255,150,0.7)";
+    ctxp.fill();
+
+    p.x+=p.dx;
+    p.y+=p.dy;
+
+    if(p.x<0||p.x>canvas.width) p.dx*=-1;
+    if(p.y<0||p.y>canvas.height) p.dy*=-1;
+  });
+
+  requestAnimationFrame(animateParticles);
+}
+
+animateParticles();
 </script>
 
 </body>
