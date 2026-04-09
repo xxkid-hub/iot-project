@@ -8,315 +8,184 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(270deg, #02070c, #001a14, #02070c);
+      background: linear-gradient(270deg,#02070c,#001a14,#02070c);
       background-size: 600% 600%;
-      animation: bgMove 15s ease infinite;
+      animation: bgMove 20s infinite;
       color: white;
       overflow-x: hidden;
     }
 
     @keyframes bgMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      0%{background-position:0%}
+      50%{background-position:100%}
+      100%{background-position:0%}
     }
 
-    /* Glow particles */
+    /* 🌪️ MULTIPLE FLOATING GLOWS */
     .glow {
       position: fixed;
-      width: 200px;
-      height: 200px;
-      background: radial-gradient(circle, rgba(0,255,150,0.3), transparent);
-      filter: blur(80px);
-      animation: float 10s infinite alternate;
+      border-radius: 50%;
+      filter: blur(120px);
       z-index: -1;
+      animation: float 12s infinite alternate ease-in-out;
     }
 
-    .glow:nth-child(1) { top: 10%; left: 10%; }
-    .glow:nth-child(2) { bottom: 10%; right: 10%; }
+    .g1 { width:300px;height:300px;background:#00ff9f33;top:10%;left:10%;}
+    .g2 { width:250px;height:250px;background:#0099ff33;bottom:10%;right:10%;}
+    .g3 { width:200px;height:200px;background:#ff00ff33;top:50%;left:50%;}
+    .g4 { width:180px;height:180px;background:#00ffff33;bottom:30%;left:20%;}
 
     @keyframes float {
-      from { transform: translateY(0); }
-      to { transform: translateY(60px); }
+      from {transform: translateY(0)}
+      to {transform: translateY(60px)}
     }
 
     h1 {
-      text-align: center;
-      margin: 20px;
-      color: #00ff9f;
-      text-shadow: 0 0 20px #00ff9f;
+      text-align:center;
+      margin:20px;
+      color:#00ff9f;
+      text-shadow:0 0 20px #00ff9f;
     }
 
-    #clock {
-      text-align: center;
-      opacity: 0.7;
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 30px;
-      padding: 30px;
-    }
-
-    .left {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:20px;
+      padding:20px;
     }
 
     .card {
-      background: rgba(0,255,150,0.05);
-      border: 1px solid rgba(0,255,150,0.3);
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 0 20px rgba(0,255,150,0.2);
-      transition: 0.3s;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(0,255,150,0.3);
+      border-radius:15px;
+      padding:15px;
+      box-shadow:0 0 20px rgba(0,255,150,0.2);
+      transition:0.3s;
     }
 
     .card:hover {
       transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(0,255,150,0.6);
+      box-shadow:0 0 30px rgba(0,255,150,0.6);
     }
 
     .value {
-      font-size: 2rem;
+      font-size:1.8rem;
+      margin-top:5px;
     }
-
-    .pump-on { color: #00ff9f; }
-    .pump-off { color: #ff4d6d; }
 
     button {
-      margin: 5px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: none;
-      background: #00ff9f;
-      color: black;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00ff9f;
-    }
-
-    button:hover {
-      background: #00cc7a;
+      margin:4px;
+      padding:6px 10px;
+      border:none;
+      border-radius:8px;
+      background:#00ff9f;
+      font-weight:bold;
+      cursor:pointer;
     }
 
     .graph {
+      grid-column: span 4;
       background: rgba(255,255,255,0.05);
-      border-radius: 15px;
-      padding: 20px;
+      border-radius:15px;
+      padding:20px;
     }
 
-    canvas {
-      width: 100% !important;
-      height: 350px !important;
-    }
-
-    .alert {
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .critical {
-      color: red;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      50% { opacity: 0.4; }
-    }
-
-    .desc-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin: 20px;
-    }
-
-    .desc-box {
-      padding: 15px;
-      border-radius: 12px;
-      background: rgba(0,255,150,0.05);
-      border: 1px solid rgba(0,255,150,0.3);
-    }
+    canvas { height:300px !important; }
 
   </style>
 </head>
 
 <body>
 
-<div class="glow"></div>
-<div class="glow"></div>
+<!-- 🌪️ Glow layers -->
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+<div class="glow g3"></div>
+<div class="glow g4"></div>
 
-<h1>🌱 Smart Plant Control Panel</h1>
-<p id="clock"></p>
+<h1>🌱 Smart Plant Dashboard</h1>
 
-<div class="container">
+<div class="grid">
 
-  <div class="left">
+  <div class="card"><h3>💧 Moisture</h3><div id="moisture" class="value"></div></div>
+  <div class="card"><h3>🚿 Pump</h3><div id="pump" class="value"></div></div>
+  <div class="card"><h3>🌡️ Temp</h3><div id="temp" class="value"></div></div>
+  <div class="card"><h3>💡 Light</h3><div id="light" class="value"></div></div>
 
-    <div class="card">
-      <h3>💧 Moisture</h3>
-      <div class="value" id="moisture">--</div>
-      <div id="status"></div>
-      <div id="prediction"></div>
-    </div>
+  <div class="card"><h3>🌫️ Humidity</h3><div id="humidity" class="value"></div></div>
+  <div class="card"><h3>📶 Device</h3><div id="device">🟢 Online</div></div>
 
-    <div class="card">
-      <h3>🚿 Pump</h3>
-      <div class="value" id="pump">--</div>
+  <div class="card">
+    <h3>🎛️ Threshold</h3>
+    <input type="range" min="500" max="2000" value="1000" id="slider">
+    <div id="thVal">1000</div>
+  </div>
 
-      <button onclick="turnPumpOn()">ON</button>
-      <button onclick="turnPumpOff()">OFF</button>
-      <button onclick="autoMode()">AUTO</button>
-
-      <div id="reason"></div>
-    </div>
-
-    <div class="card">
-      <h3>🌡️ Temperature</h3>
-      <div class="value" id="temp">--</div>
-    </div>
-
-    <div class="card">
-      <h3>💡 Light</h3>
-      <div class="value" id="light">--</div>
-    </div>
-
-    <div class="card">
-      <h3>📶 Device</h3>
-      <div id="device">🟢 Online</div>
-    </div>
-
-    <div class="card">
-      <h3>⚙️ Threshold</h3>
-      <input type="range" min="500" max="2000" value="1000" id="threshold">
-      <div id="thresholdVal">1000</div>
-    </div>
-
-    <button onclick="resetGraph()">Reset Graph</button>
-    <button onclick="simulateDry()">Simulate Dry</button>
-    <button onclick="simulateWet()">Simulate Wet</button>
-
-    <div class="alert" id="alert"></div>
-
+  <div class="card">
+    <h3>🎮 Controls</h3>
+    <button onclick="onPump()">ON</button>
+    <button onclick="offPump()">OFF</button>
+    <button onclick="auto()">AUTO</button>
+    <button onclick="dry()">Dry</button>
+    <button onclick="wet()">Wet</button>
   </div>
 
   <div class="graph">
     <canvas id="chart"></canvas>
+    <button onclick="reset()">Reset</button>
   </div>
 
 </div>
 
-<div class="desc-row">
-  <div class="desc-box">💧 Moisture = soil water level</div>
-  <div class="desc-box">🚿 Pump = controls watering</div>
-  <div class="desc-box">🤖 Mode = auto/manual control</div>
-</div>
-
 <script>
-let currentMoisture = 1500;
-let manualPump = null;
-let threshold = 1000;
-let history = [];
+let moisture=1500, manual=null, threshold=1000;
+let ctx=document.getElementById("chart").getContext("2d");
 
-const ctx = document.getElementById('chart').getContext('2d');
-
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [
-      { label: 'Moisture', data: [], borderColor: '#00ff9f', tension: 0.4 },
-      { label: 'Threshold', data: [], borderColor: 'red', borderDash:[5,5] }
-    ]
-  }
+let chart=new Chart(ctx,{
+  type:'line',
+  data:{labels:[],datasets:[{data:[],borderColor:'#00ff9f'}]}
 });
 
-function generateMoisture(){
-  currentMoisture += Math.random()*200-100;
-  return Math.round(currentMoisture);
-}
+function updateData(){
+  moisture += Math.random()*200-100;
 
-function simulateDry(){ currentMoisture = 400; }
-function simulateWet(){ currentMoisture = 2500; }
+  let temp=Math.floor(Math.random()*10+25);
+  let light=Math.floor(Math.random()*1000);
+  let humidity=Math.floor(Math.random()*100);
 
-async function sendFakeData(){
-  let moisture = generateMoisture();
-  let pump = manualPump!==null?manualPump:(moisture<threshold?"ON":"OFF");
-
-  let temp = Math.floor(Math.random()*10+25);
-  let light = Math.floor(Math.random()*1000);
-
-  window.temp=temp;
-  window.light=light;
-
-  await fetch('/api/sensor',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({moisture,pump})
-  });
-}
-
-async function getData(){
-  const res = await fetch('/api/sensor');
-  const data = await res.json();
-
-  document.getElementById("moisture").innerText=data.moisture;
+  document.getElementById("moisture").innerText=Math.round(moisture);
   document.getElementById("temp").innerText=temp+"°C";
   document.getElementById("light").innerText=light;
+  document.getElementById("humidity").innerText=humidity+"%";
 
-  document.getElementById("status").innerText =
-    data.moisture<threshold?"🌵 Dry":"💧 Good";
+  let pump = manual!==null?manual:(moisture<threshold?"ON":"OFF");
+  document.getElementById("pump").innerText=pump;
 
-  document.getElementById("prediction").innerText =
-    "Prediction: drying in "+Math.floor(Math.random()*20)+"s";
-
-  document.getElementById("pump").innerText=data.pump;
-
-  document.getElementById("reason").innerText =
-    manualPump===null?"Auto mode":"Manual override";
-
-  document.getElementById("alert").innerText =
-    data.moisture<500?"🚨 Critical":"✅ Normal";
-
-  history.push(data.moisture);
-  if(history.length>20) history.shift();
-
-  const time=new Date().toLocaleTimeString();
+  let t=new Date().toLocaleTimeString();
+  chart.data.labels.push(t);
+  chart.data.datasets[0].data.push(moisture);
 
   if(chart.data.labels.length>20){
     chart.data.labels.shift();
-    chart.data.datasets.forEach(d=>d.data.shift());
+    chart.data.datasets[0].data.shift();
   }
 
-  chart.data.labels.push(time);
-  chart.data.datasets[0].data.push(data.moisture);
-  chart.data.datasets[1].data.push(threshold);
-
   chart.update();
 }
 
-function turnPumpOn(){ manualPump="ON"; }
-function turnPumpOff(){ manualPump="OFF"; }
-function autoMode(){ manualPump=null; }
+function onPump(){manual="ON"}
+function offPump(){manual="OFF"}
+function auto(){manual=null}
+function dry(){moisture=400}
+function wet(){moisture=2500}
+function reset(){chart.data.labels=[];chart.data.datasets[0].data=[];chart.update()}
 
-document.getElementById("threshold").oninput=function(){
+document.getElementById("slider").oninput=function(){
   threshold=this.value;
-  document.getElementById("thresholdVal").innerText=threshold;
+  document.getElementById("thVal").innerText=threshold;
 }
 
-function resetGraph(){
-  chart.data.labels=[];
-  chart.data.datasets.forEach(d=>d.data=[]);
-  history=[];
-  chart.update();
-}
-
-setInterval(()=>{document.getElementById("clock").innerText=new Date().toLocaleString()},1000);
-setInterval(sendFakeData,2000);
-setInterval(getData,2000);
+setInterval(updateData,2000);
 </script>
 
 </body>
