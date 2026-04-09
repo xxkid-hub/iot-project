@@ -8,15 +8,41 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #050a0f;
+      background: radial-gradient(circle at top, #06131a, #02070c);
       color: white;
       text-align: center;
+      overflow-x: hidden;
     }
 
     h1 {
       margin: 20px;
       color: #00ff9f;
-      text-shadow: 0 0 15px #00ff9f;
+      text-shadow: 0 0 20px #00ff9f, 0 0 40px #00ff9f;
+    }
+
+    /* 🌈 Neon swirl glow background */
+    body::before {
+      content: "";
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,255,150,0.2), transparent);
+      top: -200px;
+      left: -200px;
+      filter: blur(100px);
+      z-index: -1;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,150,255,0.2), transparent);
+      bottom: -200px;
+      right: -200px;
+      filter: blur(100px);
+      z-index: -1;
     }
 
     button {
@@ -28,6 +54,7 @@
       color: black;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 0 10px #00ff9f;
     }
 
     button:hover {
@@ -37,7 +64,6 @@
     .main {
       display: flex;
       justify-content: center;
-      align-items: flex-start;
       gap: 30px;
       padding: 20px;
       flex-wrap: wrap;
@@ -52,10 +78,16 @@
 
     .card {
       background: rgba(0,255,150,0.05);
-      border: 1px solid rgba(0,255,150,0.2);
+      border: 1px solid rgba(0,255,150,0.3);
       border-radius: 15px;
       padding: 20px;
-      box-shadow: 0 0 15px rgba(0,255,150,0.2);
+      box-shadow: 0 0 20px rgba(0,255,150,0.3);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(0,255,150,0.6);
     }
 
     .value {
@@ -64,17 +96,14 @@
     }
 
     .pump-on { color: #00ff9f; }
-    .pump-off { color: #ff4d4d; }
-
-    .status { margin-top: 8px; opacity: 0.8; }
-    .alert { margin-top: 10px; font-weight: bold; }
+    .pump-off { color: #ff4d6d; }
 
     .graph {
-      width: 600px;
+      width: 650px;
       background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(0,255,150,0.2);
       border-radius: 15px;
       padding: 20px;
+      box-shadow: 0 0 20px rgba(0,255,150,0.2);
     }
 
     canvas {
@@ -82,20 +111,41 @@
       height: 300px !important;
     }
 
-    /* ✨ CLEAN DESCRIPTION STYLE */
-    .desc {
+    /* 🔥 Description boxes */
+    .desc-container {
+      display: flex;
+      gap: 15px;
       margin-top: 20px;
-      width: 600px;
-      text-align: left;
-      font-size: 0.9rem;
-      opacity: 0.85;
-      line-height: 1.6;
+      flex-wrap: wrap;
     }
 
-    .desc span {
-      color: #00ff9f;
+    .desc-box {
+      flex: 1;
+      min-width: 180px;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      text-align: left;
+      background: rgba(0,255,150,0.05);
+      border: 1px solid rgba(0,255,150,0.3);
+      box-shadow: 0 0 10px rgba(0,255,150,0.3);
+    }
+
+    .desc-box:nth-child(2) {
+      border-color: rgba(0,150,255,0.5);
+      box-shadow: 0 0 10px rgba(0,150,255,0.5);
+    }
+
+    .desc-box:nth-child(3) {
+      border-color: rgba(200,0,255,0.5);
+      box-shadow: 0 0 10px rgba(200,0,255,0.5);
+    }
+
+    .alert {
+      margin-top: 10px;
       font-weight: bold;
     }
+
   </style>
 </head>
 
@@ -112,47 +162,57 @@
     <div class="card">
       <h3>💧 Moisture</h3>
       <div class="value" id="moisture">--</div>
-      <div class="status" id="status">--</div>
+      <div id="status"></div>
     </div>
 
     <div class="card">
       <h3>🚿 Pump</h3>
       <div class="value" id="pump">--</div>
 
-      <div>
-        <button onclick="turnPumpOn()">ON</button>
-        <button onclick="turnPumpOff()">OFF</button>
-        <button onclick="autoMode()">AUTO</button>
-      </div>
+      <button onclick="turnPumpOn()">ON</button>
+      <button onclick="turnPumpOff()">OFF</button>
+      <button onclick="autoMode()">AUTO</button>
 
-      <div class="status" id="mode">Mode: AUTO</div>
+      <div id="mode">Mode: AUTO</div>
     </div>
 
     <div class="card">
       <h3>📊 Stats</h3>
-      <div id="avg">Avg: --</div>
-      <div id="min">Min: --</div>
-      <div id="max">Max: --</div>
-      <div id="pumpCount">Pump Used: 0</div>
+      <div id="avg"></div>
+      <div id="min"></div>
+      <div id="max"></div>
+      <div id="pumpCount"></div>
     </div>
 
     <div class="alert" id="alert"></div>
 
   </div>
 
-  <!-- GRAPH -->
+  <!-- RIGHT -->
   <div>
+
     <div class="graph">
       <canvas id="chart"></canvas>
     </div>
 
-    <!-- ✨ CLEAN DESCRIPTION BELOW GRAPH -->
-    <div class="desc">
-      <p><span>Moisture:</span> Represents the water level in soil. Lower values indicate dry soil, while higher values indicate sufficient water.</p>
+    <!-- 🔥 Separate description boxes -->
+    <div class="desc-container">
 
-      <p><span>Pump:</span> Controls water supply. It turns ON when soil is dry and OFF when enough moisture is detected.</p>
+      <div class="desc-box">
+        💧 <b>Moisture</b><br>
+        Measures soil water level. Low = dry soil, high = wet soil.
+      </div>
 
-      <p><span>Mode:</span> AUTO mode controls watering automatically. MANUAL mode allows user control using buttons.</p>
+      <div class="desc-box">
+        🚿 <b>Pump</b><br>
+        Supplies water. Turns ON when soil is dry and OFF when moisture is enough.
+      </div>
+
+      <div class="desc-box">
+        🤖 <b>Mode</b><br>
+        AUTO = automatic watering, MANUAL = user control.
+      </div>
+
     </div>
 
   </div>
@@ -195,7 +255,7 @@ async function sendFakeData() {
 
   await fetch('/api/sensor', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ moisture, pump })
   });
 }
@@ -210,31 +270,30 @@ async function getData() {
 
   const pumpEl = document.getElementById("pump");
   pumpEl.innerText = data.pump;
-  pumpEl.className = "value " + (data.pump === "ON" ? "pump-on" : "pump-off");
+  pumpEl.className = data.pump === "ON" ? "pump-on" : "pump-off";
 
   document.getElementById("mode").innerText =
     "Mode: " + (manualPump === null ? "AUTO" : "MANUAL");
 
-  if (data.moisture < 500)
-    document.getElementById("alert").innerText = "🚨 Critical Dry!";
-  else if (data.moisture < 1000)
-    document.getElementById("alert").innerText = "⚠️ Water Needed!";
-  else if (data.moisture > 2500)
-    document.getElementById("alert").innerText = "💧 Too Wet!";
-  else
-    document.getElementById("alert").innerText = "✅ Perfect";
+  // Alerts
+  document.getElementById("alert").innerText =
+    data.moisture < 1000 ? "⚠️ Water Needed!" : "✅ Healthy";
 
+  // Stats
   history.push(data.moisture);
   if (history.length > 20) history.shift();
 
-  let avg = Math.round(history.reduce((a,b)=>a+b,0)/history.length);
-  document.getElementById("avg").innerText = "Avg: " + avg;
-  document.getElementById("min").innerText = "Min: " + Math.min(...history);
-  document.getElementById("max").innerText = "Max: " + Math.max(...history);
+  document.getElementById("avg").innerText =
+    "Avg: " + Math.round(history.reduce((a,b)=>a+b,0)/history.length);
+  document.getElementById("min").innerText =
+    "Min: " + Math.min(...history);
+  document.getElementById("max").innerText =
+    "Max: " + Math.max(...history);
 
   if (data.pump === "ON" && lastPumpState === "OFF") pumpCount++;
   lastPumpState = data.pump;
-  document.getElementById("pumpCount").innerText = "Pump Used: " + pumpCount;
+  document.getElementById("pumpCount").innerText =
+    "Pump Used: " + pumpCount;
 
   const time = new Date().toLocaleTimeString();
 
@@ -248,16 +307,13 @@ async function getData() {
   chart.update();
 }
 
-function turnPumpOn() { manualPump = "ON"; }
-function turnPumpOff() { manualPump = "OFF"; }
-function autoMode() { manualPump = null; }
+function turnPumpOn(){ manualPump="ON"; }
+function turnPumpOff(){ manualPump="OFF"; }
+function autoMode(){ manualPump=null; }
 
-setInterval(() => {
-  document.getElementById("clock").innerText = new Date().toLocaleString();
-}, 1000);
-
-setInterval(sendFakeData, 2000);
-setInterval(getData, 2000);
+setInterval(()=>{ document.getElementById("clock").innerText=new Date().toLocaleString(); },1000);
+setInterval(sendFakeData,2000);
+setInterval(getData,2000);
 </script>
 
 </body>
