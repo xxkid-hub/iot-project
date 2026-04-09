@@ -1,14 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Plant Monitoring</title>
+  <title>Smart Plant Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 30px;
+      font-size: 2.5rem;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 50px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      width: 200px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .value {
+      font-size: 2.5rem;
+      margin-top: 10px;
+    }
+
+    .pump-on {
+      color: #00ff88;
+    }
+
+    .pump-off {
+      color: #ff4d4d;
+    }
+  </style>
 </head>
 
-<body style="text-align:center; font-family:Arial;">
+<body>
+
   <h1>🌱 Smart Plant Dashboard</h1>
 
-  <h2>Moisture: <span id="moisture">Loading...</span></h2>
-  <h2>Pump: <span id="pump">Loading...</span></h2>
+  <div class="container">
+    
+    <div class="card">
+      <h2>💧 Moisture</h2>
+      <div class="value" id="moisture">--</div>
+    </div>
+
+    <div class="card">
+      <h2>🚿 Pump</h2>
+      <div class="value" id="pump">--</div>
+    </div>
+
+  </div>
 
   <script>
     async function getData() {
@@ -16,10 +71,19 @@
       const data = await res.json();
 
       document.getElementById("moisture").innerText = data.moisture;
-      document.getElementById("pump").innerText = data.pump;
+
+      const pumpEl = document.getElementById("pump");
+      pumpEl.innerText = data.pump;
+
+      if (data.pump === "ON") {
+        pumpEl.className = "value pump-on";
+      } else {
+        pumpEl.className = "value pump-off";
+      }
     }
 
     setInterval(getData, 2000);
   </script>
+
 </body>
 </html>
