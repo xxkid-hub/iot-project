@@ -223,17 +223,28 @@
   setInterval(sendFakeData, 2000);
   setInterval(getData, 2000);
 
-  // 🔥 Manual controls
-  function turnPumpOn() {
-    manualPump = "ON";
-  }
+ // 🔥 Manual controls (FIXED)
+async function turnPumpOn() {
+  manualPump = "ON";
+  await fetch('/api/sensor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ moisture: currentMoisture, pump: "ON" })
+  });
+}
 
-  function turnPumpOff() {
-    manualPump = "OFF";
-  }
+async function turnPumpOff() {
+  manualPump = "OFF";
+  await fetch('/api/sensor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ moisture: currentMoisture, pump: "OFF" })
+  });
+}
 
-  function autoMode() {
-    manualPump = null;
+function autoMode() {
+  manualPump = null;
+}
   }
 </script>
 
