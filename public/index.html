@@ -10,10 +10,8 @@
       font-family: 'Segoe UI', sans-serif;
       background: #02070c;
       color: white;
-      overflow-x: hidden;
     }
 
-    /* 🌪️ NEON SWIRL BACKGROUND */
     body::before, body::after {
       content: "";
       position: fixed;
@@ -53,7 +51,6 @@
       grid-template-columns: 300px 1fr;
       gap: 30px;
       padding: 30px;
-      align-items: start;
     }
 
     .left {
@@ -72,33 +69,48 @@
 
     .value {
       font-size: 2rem;
-      margin-top: 10px;
     }
 
     .pump-on { color: #00ff9f; }
     .pump-off { color: #ff4d6d; }
 
-    button {
-      margin: 5px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: none;
-      background: #00ff9f;
-      color: black;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00ff9f;
+    /* 🔥 Toggle Switch */
+    .toggle {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    button:hover {
-      background: #00cc7a;
+    .switch {
+      width: 50px;
+      height: 25px;
+      background: #333;
+      border-radius: 20px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .switch::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      background: #00ff9f;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .switch.active::after {
+      left: 26px;
     }
 
     .graph {
       background: rgba(255,255,255,0.05);
       border-radius: 15px;
       padding: 20px;
-      box-shadow: 0 0 20px rgba(0,255,150,0.2);
     }
 
     canvas {
@@ -106,12 +118,26 @@
       height: 350px !important;
     }
 
-    /* 🔥 DESCRIPTION ROW */
+    .alert {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .critical {
+      color: #ff4d6d;
+      text-shadow: 0 0 10px red;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.5; }
+    }
+
     .desc-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 20px;
-      margin: 30px;
+      margin: 20px;
     }
 
     .desc-box {
@@ -119,17 +145,7 @@
       border-radius: 12px;
       background: rgba(0,255,150,0.05);
       border: 1px solid rgba(0,255,150,0.3);
-      box-shadow: 0 0 15px rgba(0,255,150,0.3);
-    }
-
-    .desc-box:nth-child(2) {
-      border-color: rgba(0,150,255,0.5);
-      box-shadow: 0 0 15px rgba(0,150,255,0.5);
-    }
-
-    .desc-box:nth-child(3) {
-      border-color: rgba(200,0,255,0.5);
-      box-shadow: 0 0 15px rgba(200,0,255,0.5);
+      box-shadow: 0 0 10px rgba(0,255,150,0.3);
     }
 
   </style>
@@ -149,6 +165,7 @@
       <h3>💧 Moisture</h3>
       <div class="value" id="moisture">--</div>
       <div id="status"></div>
+      <div id="prediction"></div>
     </div>
 
     <div class="card">
@@ -157,9 +174,13 @@
 
       <button onclick="turnPumpOn()">ON</button>
       <button onclick="turnPumpOff()">OFF</button>
-      <button onclick="autoMode()">AUTO</button>
 
-      <div id="mode">Mode: AUTO</div>
+      <div class="toggle">
+        <span>AUTO</span>
+        <div id="switch" class="switch active" onclick="toggleMode()"></div>
+      </div>
+
+      <div id="reason"></div>
     </div>
 
     <div class="card">
@@ -167,8 +188,9 @@
       <div id="avg"></div>
       <div id="min"></div>
       <div id="max"></div>
-      <div id="pumpCount"></div>
     </div>
+
+    <div class="alert" id="alert"></div>
 
   </div>
 
@@ -179,32 +201,16 @@
 
 </div>
 
-<!-- 🔥 CLEAN DESCRIPTION BELOW -->
 <div class="desc-row">
-
-  <div class="desc-box">
-    💧 <b>Moisture</b><br>
-    Measures soil water level. Low = dry soil, high = wet soil.
-  </div>
-
-  <div class="desc-box">
-    🚿 <b>Pump</b><br>
-    Supplies water. Turns ON when soil is dry and OFF when moisture is enough.
-  </div>
-
-  <div class="desc-box">
-    🤖 <b>Mode</b><br>
-    AUTO = automatic watering, MANUAL = user control.
-  </div>
-
+  <div class="desc-box">💧 Moisture = soil water level</div>
+  <div class="desc-box">🚿 Pump = controls water flow</div>
+  <div class="desc-box">🤖 Mode = auto or manual control</div>
 </div>
 
 <script>
 let currentMoisture = 1500;
-let manualPump = null;
+let autoModeOn = true;
 let history = [];
-let pumpCount = 0;
-let lastPumpState = "OFF";
 
 const ctx = document.getElementById('chart').getContext('2d');
 
@@ -212,69 +218,98 @@ const chart = new Chart(ctx, {
   type: 'line',
   data: {
     labels: [],
-    datasets: [{
-      label: 'Moisture',
-      data: [],
-      borderColor: '#00ff9f',
-      tension: 0.4
-    }]
+    datasets: [
+      {
+        label: 'Moisture',
+        data: [],
+        borderColor: '#00ff9f',
+        tension: 0.4
+      },
+      {
+        label: 'Dry Line',
+        data: Array(20).fill(1000),
+        borderColor: 'red',
+        borderDash: [5,5]
+      },
+      {
+        label: 'Ideal Line',
+        data: Array(20).fill(2000),
+        borderColor: 'green',
+        borderDash: [5,5]
+      }
+    ]
   }
 });
 
 function generateMoisture() {
-  let change = Math.floor(Math.random() * 200 - 100);
+  let change = Math.random()*200 - 100;
   currentMoisture += change;
-  if (currentMoisture < 200) currentMoisture = 200;
-  if (currentMoisture > 3000) currentMoisture = 3000;
-  return currentMoisture;
+  if(currentMoisture<200) currentMoisture=200;
+  if(currentMoisture>3000) currentMoisture=3000;
+  return Math.round(currentMoisture);
 }
 
 async function sendFakeData() {
   let moisture = generateMoisture();
-  let pump = manualPump !== null ? manualPump : (moisture < 1000 ? "ON" : "OFF");
+  let pump = autoModeOn ? (moisture<1000?"ON":"OFF") : "OFF";
 
-  await fetch('/api/sensor', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ moisture, pump })
+  await fetch('/api/sensor',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({moisture,pump})
   });
 }
 
-async function getData() {
+async function getData(){
   const res = await fetch('/api/sensor');
   const data = await res.json();
 
   document.getElementById("moisture").innerText = data.moisture;
-  document.getElementById("status").innerText =
-    data.moisture < 1000 ? "🌵 Dry" : "💧 Optimal";
 
-  const pumpEl = document.getElementById("pump");
-  pumpEl.innerText = data.pump;
-  pumpEl.className = data.pump === "ON" ? "pump-on" : "pump-off";
+  let status="";
+  if(data.moisture<500) status="🚨 Critical";
+  else if(data.moisture<1000) status="🌵 Dry";
+  else if(data.moisture<2500) status="💧 Good";
+  else status="🌊 Overwatered";
 
-  document.getElementById("mode").innerText =
-    "Mode: " + (manualPump === null ? "AUTO" : "MANUAL");
+  document.getElementById("status").innerText=status;
+
+  document.getElementById("prediction").innerText =
+    "Prediction: Soil drying in ~"+Math.floor(Math.random()*20)+" sec";
+
+  document.getElementById("pump").innerText=data.pump;
+  document.getElementById("pump").className =
+    data.pump==="ON"?"pump-on":"pump-off";
+
+  document.getElementById("reason").innerText =
+    autoModeOn ? "Auto: Based on moisture" : "Manual Control";
+
+  // ALERT
+  let alert=document.getElementById("alert");
+  if(data.moisture<500){
+    alert.innerText="🚨 Critical Dry!";
+    alert.className="alert critical";
+  } else if(data.moisture<1000){
+    alert.innerText="⚠️ Water Needed!";
+    alert.className="alert";
+  } else {
+    alert.innerText="✅ Healthy";
+    alert.className="alert";
+  }
 
   history.push(data.moisture);
-  if (history.length > 20) history.shift();
+  if(history.length>20) history.shift();
 
   document.getElementById("avg").innerText =
-    "Avg: " + Math.round(history.reduce((a,b)=>a+b,0)/history.length);
-  document.getElementById("min").innerText =
-    "Min: " + Math.min(...history);
-  document.getElementById("max").innerText =
-    "Max: " + Math.max(...history);
+    "Avg: "+Math.round(history.reduce((a,b)=>a+b,0)/history.length);
+  document.getElementById("min").innerText="Min: "+Math.min(...history);
+  document.getElementById("max").innerText="Max: "+Math.max(...history);
 
-  if (data.pump === "ON" && lastPumpState === "OFF") pumpCount++;
-  lastPumpState = data.pump;
-  document.getElementById("pumpCount").innerText =
-    "Pump Used: " + pumpCount;
+  const time=new Date().toLocaleTimeString();
 
-  const time = new Date().toLocaleTimeString();
-
-  if (chart.data.labels.length > 12) {
+  if(chart.data.labels.length>20){
     chart.data.labels.shift();
-    chart.data.datasets[0].data.shift();
+    chart.data.datasets.forEach(d=>d.data.shift());
   }
 
   chart.data.labels.push(time);
@@ -282,11 +317,15 @@ async function getData() {
   chart.update();
 }
 
-function turnPumpOn(){ manualPump="ON"; }
-function turnPumpOff(){ manualPump="OFF"; }
-function autoMode(){ manualPump=null; }
+function toggleMode(){
+  autoModeOn=!autoModeOn;
+  document.getElementById("switch").classList.toggle("active");
+}
 
-setInterval(()=>{ document.getElementById("clock").innerText=new Date().toLocaleString(); },1000);
+function turnPumpOn(){ autoModeOn=false; }
+function turnPumpOff(){ autoModeOn=false; }
+
+setInterval(()=>{document.getElementById("clock").innerText=new Date().toLocaleString()},1000);
 setInterval(sendFakeData,2000);
 setInterval(getData,2000);
 </script>
