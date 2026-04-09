@@ -98,12 +98,36 @@
       flex: 1;
       min-width: 400px;
     }
+    p {
+  margin: 6px 0;
+}
   </style>
 </head>
 
 <body>
 
   <h1>🌱 Smart Plant Control Panel</h1>
+  <div style="
+  max-width: 700px;
+  margin-top: 10px;
+  background: rgba(0,255,150,0.05);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,255,150,0.2);
+  font-size: 0.95rem;
+  line-height: 1.5;
+">
+
+  <p><b>💧 Moisture:</b> Indicates the water level in the soil. Lower values mean dry soil, higher values mean wet soil.</p>
+
+  <p><b>🚿 Pump:</b> Controls water supply. Turns ON when soil is dry and OFF when moisture is sufficient.</p>
+
+  <p><b>🤖 Modes:</b> 
+    AUTO mode automatically controls watering based on moisture. 
+    MANUAL mode allows user to control pump using buttons.
+  </p>
+
+</div>
   <p id="clock"></p>
 
   <div class="main">
