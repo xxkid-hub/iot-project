@@ -127,85 +127,109 @@
 
   </div>
 
-  <script>
-    const ctx = document.getElementById('chart').getContext('2d');
+ <script>
+  let currentMoisture = 1500;
+  let manualPump = null; // null = auto mode
 
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Moisture',
-          data: [],
-          borderColor: '#00ff9f',
-          borderWidth: 2,
-          tension: 0.4
-        }]
+  const ctx = document.getElementById('chart').getContext('2d');
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Moisture',
+        data: [],
+        borderColor: '#00ff9f',
+        borderWidth: 2,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: 'white' } }
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            labels: { color: 'white' }
-          }
-        },
-        scales: {
-          x: { ticks: { color: 'white' } },
-          y: { ticks: { color: 'white' } }
-        }
+      scales: {
+        x: { ticks: { color: 'white' } },
+        y: { ticks: { color: 'white' } }
       }
+    }
+  });
+
+  // 🔥 Smooth fake data generator
+  function generateMoisture() {
+    let change = Math.floor(Math.random() * 200 - 100);
+    currentMoisture += change;
+
+    if (currentMoisture < 200) currentMoisture = 200;
+    if (currentMoisture > 3000) currentMoisture = 3000;
+
+    return currentMoisture;
+  }
+
+  async function sendFakeData() {
+    let moisture = generateMoisture();
+
+    let pump;
+    if (manualPump !== null) {
+      pump = manualPump; // manual override
+    } else {
+      pump = (moisture < 1000) ? "ON" : "OFF";
+    }
+
+    await fetch('/api/sensor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moisture, pump })
     });
+  }
 
-    async function getData() {
-      const res = await fetch('/api/sensor');
-      const data = await res.json();
+  async function getData() {
+    const res = await fetch('/api/sensor');
+    const data = await res.json();
 
-      document.getElementById("moisture").innerText = data.moisture;
+    document.getElementById("moisture").innerText = data.moisture;
 
-      let status = "";
-      if (data.moisture < 1000) {
-        status = "🌵 Dry";
-        document.getElementById("alert").innerText = "⚠️ Water Needed!";
-      } else {
-        status = "💧 Optimal";
-        document.getElementById("alert").innerText = "";
-      }
-      document.getElementById("status").innerText = status;
+    let status = data.moisture < 1000 ? "🌵 Dry" : "💧 Optimal";
+    document.getElementById("status").innerText = status;
 
-      const pumpEl = document.getElementById("pump");
-      pumpEl.innerText = data.pump;
-      pumpEl.className = "value " + (data.pump === "ON" ? "pump-on" : "pump-off");
+    document.getElementById("alert").innerText =
+      data.moisture < 1000 ? "⚠️ Water Needed!" : "";
 
-      const time = new Date().toLocaleTimeString();
+    const pumpEl = document.getElementById("pump");
+    pumpEl.innerText = data.pump;
+    pumpEl.className = "value " + (data.pump === "ON" ? "pump-on" : "pump-off");
 
-      if (chart.data.labels.length > 12) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-      }
+    const time = new Date().toLocaleTimeString();
 
-      chart.data.labels.push(time);
-      chart.data.datasets[0].data.push(data.moisture);
-      chart.update();
+    if (chart.data.labels.length > 12) {
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
     }
 
-    // 🔥 FETCH DATA
-    setInterval(getData, 2000);
+    chart.data.labels.push(time);
+    chart.data.datasets[0].data.push(data.moisture);
+    chart.update();
+  }
 
-    // 🔥 FAKE DATA GENERATOR
-    async function sendFakeData() {
-      let moisture = Math.floor(Math.random() * 3000);
-      let pump = (moisture < 1000) ? "ON" : "OFF";
+  // 🔥 intervals
+  setInterval(sendFakeData, 2000);
+  setInterval(getData, 2000);
 
-      await fetch('/api/sensor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ moisture, pump })
-      });
-    }
+  // 🔥 Manual controls
+  function turnPumpOn() {
+    manualPump = "ON";
+  }
 
-    setInterval(sendFakeData, 3000);
+  function turnPumpOff() {
+    manualPump = "OFF";
+  }
 
-  </script>
+  function autoMode() {
+    manualPump = null;
+  }
+</script>
 
 </body>
 </html>
