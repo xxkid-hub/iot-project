@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plant Monitoring</title>
+</head>
+
+<body style="text-align:center; font-family:Arial;">
+  <h1>🌱 Smart Plant Dashboard</h1>
+
+  <h2>Moisture: <span id="moisture">Loading...</span></h2>
+  <h2>Pump: <span id="pump">Loading...</span></h2>
+
+  <script>
+    async function getData() {
+      const res = await fetch('/api/sensor');
+      const data = await res.json();
+
+      document.getElementById("moisture").innerText = data.moisture;
+      document.getElementById("pump").innerText = data.pump;
+    }
+
+    setInterval(getData, 2000);
+  </script>
+</body>
+</html>
