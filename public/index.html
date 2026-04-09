@@ -101,6 +101,29 @@
     p {
   margin: 6px 0;
 }
+    .info-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.info-box {
+  flex: 1;
+  min-width: 180px;
+  background: rgba(0,255,150,0.05);
+  border: 1px solid rgba(0,255,150,0.2);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.9rem;
+  text-align: left;
+  box-shadow: 0 0 10px rgba(0,255,150,0.2);
+}
+
+.info-box h4 {
+  margin-bottom: 5px;
+  color: #00ff9f;
+}
   </style>
 </head>
 
@@ -170,6 +193,29 @@
     <div class="panel graph">
       <canvas id="chart"></canvas>
     </div>
+    <div class="panel graph">
+  <canvas id="chart"></canvas>
+
+  <!-- 🔥 DESCRIPTION BOXES -->
+  <div class="info-container">
+
+    <div class="info-box">
+      <h4>💧 Moisture</h4>
+      <p>Represents soil water level. Low value means dry soil, high value means wet soil.</p>
+    </div>
+
+    <div class="info-box">
+      <h4>🚿 Pump</h4>
+      <p>Controls water supply. Turns ON when soil is dry and OFF when moisture is sufficient.</p>
+    </div>
+
+    <div class="info-box">
+      <h4>🤖 Mode</h4>
+      <p>AUTO mode works automatically. MANUAL mode allows user control using buttons.</p>
+    </div>
+
+  </div>
+</div>
 
   </div>
 
